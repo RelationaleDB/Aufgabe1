@@ -1,0 +1,12 @@
+rdb/data/DbConnectionOracle.class
+rdb/pres/login/LoginController.class
+rdb/RDBSchemaMigration.class
+rdb/app/LoginAL.class
+rdb/data/DatabaseSettings.class
+rdb/data/DbConnection.class
+rdb/pres/mainWindow/MainWindowController.class
+rdb/bdo/OracleUser.class
+rdb/app/OracleData.class
+rdb/bdo/PostgresUser.class
+rdb/data/DbConnectionPostgres.class
+rdb/data/DbConnectionSingletonFactory.class

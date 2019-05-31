@@ -1,0 +1,8 @@
+Mai 31, 2019 4:31:35 NACHM. rdb.app.LoginAL postgresUserLogin
+INFORMATION: Postgres-Login successful for user 
+Mai 31, 2019 4:31:36 NACHM. rdb.app.LoginAL oracleUserLogin
+INFORMATION: Oracle-Login successful for user 
+Mai 31, 2019 4:32:51 NACHM. rdb.app.LoginAL postgresUserLogout
+INFORMATION: Postgres-Logout successful for user 
+Mai 31, 2019 4:32:51 NACHM. rdb.app.LoginAL oracleUserLogout
+INFORMATION: Oracle-Logout successful for user 
