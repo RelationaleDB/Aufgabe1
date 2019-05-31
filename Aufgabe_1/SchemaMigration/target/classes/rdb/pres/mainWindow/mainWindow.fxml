@@ -23,8 +23,7 @@
       <RowConstraints maxHeight="330.0" minHeight="10.0" prefHeight="111.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <ListView fx:id="listView_Auswahl_Transfer" prefHeight="188.0" prefWidth="310.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-      <Label prefHeight="16.0" prefWidth="297.0" text="Aufgabe_1: IMDB Datenbank" />
+      <ListView fx:id="listView_Auswahl_Transfer" prefHeight="265.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
       <HBox prefHeight="188.0" prefWidth="266.0" GridPane.rowIndex="1">
          <children>
             <VBox prefHeight="252.0" prefWidth="184.0">
@@ -57,8 +56,12 @@
       </HBox>
       <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
          <children>
-            <Button mnemonicParsing="false" prefHeight="42.0" prefWidth="233.0" text="1. Schema nach Oracle" />
-            <TextArea prefHeight="200.0" prefWidth="200.0" />
+            <TextArea editable="false" prefHeight="42.0" prefWidth="413.0" />
          </children></HBox>
+      <HBox prefHeight="100.0" prefWidth="200.0">
+         <children>
+            <Button fx:id="schemanaKopieren" onAction="#schemaTransfer" mnemonicParsing="false" prefHeight="36.0" prefWidth="322.0" text="1. Schema nach Oracle DB kopieren" wrapText="true" />
+         </children>
+      </HBox>
    </children>
 </GridPane>
