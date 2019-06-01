@@ -3,17 +3,10 @@
  */
 package rdb.pres.mainWindow;
 
-import java.io.IOException;
 import java.net.URL;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -26,10 +19,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import rdb.RDBSchemaMigration;
-import rdb.data.DbConnection;
-import rdb.data.DbConnectionSingletonFactory;
 import rdb.app.App;
 
 /**
@@ -45,6 +37,8 @@ public class MainWindowController implements Initializable {
     private RDBSchemaMigration application;
     private App app;
     
+    @FXML
+    private TextField schemaEingeben;
     @FXML
     private ListView<String> listView_Auswahl_Transfer;
     @FXML
@@ -62,7 +56,7 @@ public class MainWindowController implements Initializable {
     @FXML
     private ChoiceBox<Integer> choiceBox_ProductionYear_2;
     @FXML
-    private Button schemanaKopieren;
+    private Button schemaKopieren;
     @FXML
     private Button button_addToListView;
     @FXML
@@ -73,6 +67,8 @@ public class MainWindowController implements Initializable {
     private Button button_startTransfer;
     @FXML
     private TextArea textArea_beforeTransfer;
+    
+    private ArrayList<Button> buttonList;
     
     List<ChoiceBox<String>> listOfChoiceBoxes = new ArrayList<ChoiceBox<String>>();
     ObservableList<String> observableList = FXCollections.observableArrayList();
@@ -85,13 +81,28 @@ public class MainWindowController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         app = new App();
         addItems_To_ChoiceBoxes();
+        buttonList = new ArrayList<Button>()
+        {{add(button_startTransfer);add(button_addToListView);add(button_deleteFromListView);add(button_brechneTransfer);}};
+        for(Button button : buttonList)
+            button.setDisable(true);
+        
     }
 
     //TODO implement the controller for the migration process
 
     @FXML
     private void schemaTransfer() {
-        app.call_SchemaTransfer();
+        if(schemaEingeben.getText().equals(""))
+            schemaEingeben.setStyle("-fx-text-inner-color: green;");
+        else{
+            if(app.call_SchemaTransfer(schemaEingeben.getText())){
+                schemaEingeben.setText("Das Schema wurde erfolgreich kopiert.");
+                schemaKopieren.setDisable(true);
+                schemaEingeben.setStyle("-fx-text-inner-color: black;");
+                for(Button button : buttonList)
+                    button.setDisable(false);
+            }
+        }
     }
     
     @FXML
@@ -101,17 +112,21 @@ public class MainWindowController implements Initializable {
     
     @FXML
     private void startTransfer() {
-        app.call_startTransfer();
+            app.call_startTransfer();
     }
     @FXML
     private void deleteFromListView() {
+        String message = "";
         while(listView_Auswahl_Transfer.getSelectionModel().selectedItemProperty().getValue()!=null){
             String s = listView_Auswahl_Transfer.getSelectionModel().selectedItemProperty().getValue();
+            message=s;
             observableList.remove(s);
             listView_Auswahl_Transfer.getSelectionModel().clearSelection();
         }
         listView_Auswahl_Transfer.getItems().clear();
         listView_Auswahl_Transfer.getItems().addAll(observableList);
+        if(!message.isEmpty())
+            schemaEingeben.setText("Type wurde gelöscht: "+message);
     }
     
     @FXML
@@ -133,6 +148,7 @@ public class MainWindowController implements Initializable {
         }
         observableList=list;
         listView_Auswahl_Transfer.getItems().addAll(observableList);
+        schemaEingeben.setText("Diese Types... sind jetzt in der Liste");
     }
 
     private void addItems_To_ChoiceBoxes(){

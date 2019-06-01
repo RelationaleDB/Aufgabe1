@@ -657,4 +657,4 @@ public class OracleData {
         return table_exists;
     }
   
-}//Ende der Klasse OracleData
+}

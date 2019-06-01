@@ -5,12 +5,13 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="rdb.pres.mainWindow.MainWindowController">
   <columnConstraints>
@@ -49,18 +50,22 @@
                   <Button fx:id="button_deleteFromListView" mnemonicParsing="false" onAction="#deleteFromListView" prefHeight="44.0" prefWidth="124.0" text="Entfernen" />
                   <Label alignment="CENTER" prefHeight="36.0" prefWidth="209.0" text="5. Tansfer:" textAlignment="CENTER" />
                   <Button fx:id="button_brechneTransfer" mnemonicParsing="false" onAction="#berechneTransfer" prefHeight="53.0" prefWidth="151.0" text="Berechnen" />
-                  <Button fx:id="button_startTransfer1" mnemonicParsing="false" onAction="#startTransfer" prefHeight="53.0" prefWidth="151.0" text="Starten" />
+                  <Button fx:id="button_startTransfer" mnemonicParsing="false" onAction="#startTransfer" prefHeight="53.0" prefWidth="151.0" text="Starten" />
                </children>
             </VBox>
          </children>
       </HBox>
       <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
          <children>
-            <TextArea editable="false" prefHeight="42.0" prefWidth="413.0" />
+            <Button fx:id="schemaKopieren" mnemonicParsing="false" onAction="#schemaTransfer" prefHeight="36.0" prefWidth="324.0" text="Schema nach Oracle DB kopieren" wrapText="true" />
          </children></HBox>
       <HBox prefHeight="100.0" prefWidth="200.0">
          <children>
-            <Button fx:id="schemanaKopieren" onAction="#schemaTransfer" mnemonicParsing="false" prefHeight="36.0" prefWidth="322.0" text="1. Schema nach Oracle DB kopieren" wrapText="true" />
+            <TextField fx:id="schemaEingeben" prefHeight="46.0" prefWidth="344.0" promptText="1. Ein existierendes Oracle Schema eingeben">
+               <font>
+                  <Font size="12.0" />
+               </font>
+            </TextField>
          </children>
       </HBox>
    </children>
