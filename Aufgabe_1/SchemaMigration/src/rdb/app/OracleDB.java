@@ -53,7 +53,7 @@ public class OracleDB {
             
             while(rs.next())
             {
-                if(rs.getString("TABLE_SCHEM").equals(schemaName)){
+                if(rs.getString("TABLE_SCHEM").contains(schemaName)){
                     tableName = rs.getString("TABLE_NAME");
                     tableNamesList_Oracle.add(tableName);
                 }
@@ -152,7 +152,7 @@ public class OracleDB {
         ResultSet schemas = databaseMetaDataORCL.getSchemas();
         while(schemas.next()){
             if(schemaName.toUpperCase().equals(schemas.getString(1).toUpperCase())){
-                this.schemaName = schemaName;
+                this.schemaName = schemaName.toUpperCase();
                 result=true;
             }
         }

@@ -49,7 +49,7 @@
                   <Button fx:id="button_addToListView" mnemonicParsing="false" onAction="#addToListView" prefHeight="42.0" prefWidth="112.0" text="Hinzufügen" />
                   <Button fx:id="button_deleteFromListView" mnemonicParsing="false" onAction="#deleteFromListView" prefHeight="44.0" prefWidth="124.0" text="Entfernen" />
                   <Label alignment="CENTER" prefHeight="36.0" prefWidth="209.0" text="5. Tansfer:" textAlignment="CENTER" />
-                  <Button fx:id="button_brechneTransfer" mnemonicParsing="false" onAction="#berechneTransfer" prefHeight="53.0" prefWidth="151.0" text="Berechnen" />
+                  <Button fx:id="button_brechneTransfer" mnemonicParsing="false" onAction="#calculateTransfer" prefHeight="53.0" prefWidth="151.0" text="Berechnen" />
                   <Button fx:id="button_startTransfer" mnemonicParsing="false" onAction="#startTransfer" prefHeight="53.0" prefWidth="151.0" text="Starten" />
                </children>
             </VBox>

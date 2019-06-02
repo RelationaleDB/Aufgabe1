@@ -5,15 +5,8 @@
  */
 package rdb.app;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import rdb.data.DbConnection;
-import rdb.data.DbConnectionSingletonFactory;
 import rdb.app.PostgresDB;
 import rdb.app.OracleDB;
 
@@ -38,9 +31,6 @@ public class App {
             if(orclDB.callDropTables()){
                 ArrayList<StringBuilder> sql = pgDB.callGetSchemaSQL();
                 orclDB.callCreateSchema(sql);
-                for(StringBuilder sb : sql){
-                    System.out.println(sb.toString());
-                }
                 success=true;
             }
         }
@@ -48,12 +38,8 @@ public class App {
     }
    
     
-    private List<String> berechneTransfer() {
-        List<String> list = new ArrayList<String>();
-        
-        
-        
-        return list;
+    private ArrayList<StringBuilder> calculateTransfer(ArrayList<String> typeNamesList, Integer[] productioYear) {
+        return pgDB.callCalculateTransfer(typeNamesList, productioYear);
     }
     
     private boolean startTransfer() {
@@ -74,8 +60,8 @@ public class App {
         return schemaTransfer(schemaName);
     }
     
-    public List<String> call_berechneTransfer() {
-        return berechneTransfer();
+    public ArrayList<StringBuilder> call_CalculateTransfer(ArrayList<String> typeNamesList, Integer[] productionYear) {
+        return calculateTransfer(typeNamesList, productionYear);
     }
     
     public boolean call_startTransfer() {
