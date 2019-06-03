@@ -139,13 +139,15 @@ public class MainWindowController implements Initializable {
                 observableList_typeChoices.add(cbox.getValue());
         }
         
-        productionyear[0]=choiceBox_ProductionYear_1.getValue();
-        productionyear[1]=choiceBox_ProductionYear_2.getValue();
-        
-        if(productionyear[0]>productionyear[1]){
-            Integer temp = productionyear[0];
-            productionyear[0]=productionyear[1];
-            productionyear[1]=temp;
+        if(choiceBox_ProductionYear_1.getValue()!=null&&choiceBox_ProductionYear_2.getValue()!=null){
+            productionyear[0]=choiceBox_ProductionYear_1.getValue();
+            productionyear[1]=choiceBox_ProductionYear_2.getValue();
+
+            if(productionyear[0]>productionyear[1]){
+                Integer temp = productionyear[0];
+                productionyear[0]=productionyear[1];
+                productionyear[1]=temp;
+            }
         }
         
         ObservableList list = FXCollections.observableArrayList();

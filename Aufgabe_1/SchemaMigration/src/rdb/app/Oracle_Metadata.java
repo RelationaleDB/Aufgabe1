@@ -18,7 +18,7 @@ import rdb.data.DbConnectionSingletonFactory;
  *
  * @author a
  */
-public class OracleDB {
+public class Oracle_Metadata {
     private DbConnectionSingletonFactory dbConFactory;
     private DbConnection dbConOracle;
     private DatabaseMetaData databaseMetaDataORCL;
@@ -28,7 +28,7 @@ public class OracleDB {
     ArrayList<String> tableNamesList_Oracle=null;
     ArrayList<Pair<String, String>> foreignKeysList_Oracle=null;
     
-    public OracleDB(){
+    public Oracle_Metadata(){
         dbConFactory = DbConnectionSingletonFactory.getDbConnectionSingletonFactory();
         dbConOracle = dbConFactory.getDbConnection("oracle");
         getMetaDataConnection();

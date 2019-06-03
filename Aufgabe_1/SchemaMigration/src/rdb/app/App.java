@@ -8,7 +8,8 @@ package rdb.app;
 import java.util.ArrayList;
 import java.util.List;
 import rdb.app.PostgresDB;
-import rdb.app.OracleDB;
+import rdb.app.Oracle_Metadata;
+import rdb.app.Postgres_Test_Tables;
 
 /**
  *
@@ -16,21 +17,24 @@ import rdb.app.OracleDB;
  */
 public class App {
     PostgresDB pgDB;
-    OracleDB orclDB;
-    
+    Oracle_Metadata orcl_DB_Struct;
+    Postgres_Test_Tables postgresTestTables;
     
     public App(){
        pgDB = new PostgresDB();
-       orclDB = new OracleDB();
+       orcl_DB_Struct = new Oracle_Metadata();
+       postgresTestTables = new Postgres_Test_Tables();
     }
     
     
     private boolean schemaTransfer(String schemaName) {
         boolean success = false;
-        if(orclDB.setSchemaName(schemaName)){
-            if(orclDB.callDropTables()){
-                ArrayList<StringBuilder> sql = pgDB.callGetSchemaSQL();
-                orclDB.callCreateSchema(sql);
+        if(orcl_DB_Struct.setSchemaName(schemaName)){
+            if(orcl_DB_Struct.callDropTables()){
+                ArrayList<StringBuilder> sql_orcl = pgDB.callGetSchemaSQL_for_ORCL();
+                ArrayList<StringBuilder> sql_pg = pgDB.callGetSchemaSQL_for_PG();
+                postgresTestTables.callCreateSchema(sql_pg);
+                orcl_DB_Struct.callCreateSchema(sql_orcl);
                 success=true;
             }
         }
