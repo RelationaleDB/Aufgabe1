@@ -24,7 +24,6 @@ public class Postgres_Test_Tables {
     private DbConnection dbConPostgres;
     private DatabaseMetaData databaseMetaDataORCL;
     PostgresDB postgresDB;
-    String schemaName;
 
     
     ArrayList<String> tableNamesList_Oracle=null;
@@ -46,13 +45,25 @@ public class Postgres_Test_Tables {
         }
     }
     
-  
+    private void postgres_dropTables(){
+        ArrayList<StringBuilder> sql = postgresDB.callDropTables_PG();
+        for(StringBuilder sb : sql)
+                System.out.println(sb.toString());
+        try(Statement stmt = dbConPostgres.getConnection().createStatement();)
+            {
+                for(StringBuilder sql_stmt : sql)
+                    stmt.addBatch(sql_stmt.toString()); 
+                stmt.executeBatch();
+            }catch(SQLException ex){
+                    ex.printStackTrace();
+            } 
+    }
     
     private void postgres_createSchema(ArrayList<StringBuilder> sql){
        ArrayList<StringBuilder> sql2= postgresDB.callGetSchemaSQL_for_PG();
         for(StringBuilder sb : sql2)
                 System.out.println(sb.toString());
-        
+        postgres_dropTables();
             try(Statement stmt = dbConPostgres.getConnection().createStatement();)
             {
                 for(StringBuilder sql_stmt : sql2)
@@ -68,21 +79,5 @@ public class Postgres_Test_Tables {
         postgres_createSchema(sql);
     }
     
-    public boolean setSchemaName(String schemaName) {
-        boolean result=false;
-        try
-        {
-        ResultSet schemas = databaseMetaDataORCL.getSchemas();
-        while(schemas.next()){
-            if(schemaName.toUpperCase().equals(schemas.getString(1).toUpperCase())){
-                this.schemaName = schemaName.toUpperCase();
-                result=true;
-            }
-        }
-        }catch(SQLException ex){
-            ex.printStackTrace();
-        }
-        return result;
-    }
     
 }

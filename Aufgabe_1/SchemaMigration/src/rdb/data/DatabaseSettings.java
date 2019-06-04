@@ -13,8 +13,8 @@ public class DatabaseSettings {
     /**
      * final for Oracle-Server-JDBC-String
      */
-    //public static final String ORACLE_DATABASE_URL = "jdbc:oracle:thin:@dbvm02.iai.uni-bonn.de:1521:dbvm02";
-    public static final String ORACLE_DATABASE_URL = "jdbc:oracle:thin:@localhost:1521/ORCLCDB.localdomain";
+    public static final String ORACLE_DATABASE_URL = "jdbc:oracle:thin:@dbvm02.iai.uni-bonn.de:1521:dbvm02";
+    //public static final String ORACLE_DATABASE_URL = "jdbc:oracle:thin:@localhost:1521/ORCLCDB.localdomain";
 
     /**
      * final for Oracle-schemaname
@@ -25,8 +25,8 @@ public class DatabaseSettings {
     /**
      * final for PostgreSQL-Server-JDBC-String
      */
-    //public static final String POSTGRES_DATABASE_URL = "jdbc:postgresql://dbvm09.iai.uni-bonn.de:5432/imdb";
-    public static final String POSTGRES_DATABASE_URL = "jdbc:postgresql://localhost:5432/imdb";
+    public static final String POSTGRES_DATABASE_URL = "jdbc:postgresql://dbvm09.iai.uni-bonn.de:5432/imdb";
+    //public static final String POSTGRES_DATABASE_URL = "jdbc:postgresql://localhost:5432/imdb";
 
     /**
      * final for PostgreSQL-schemaname

@@ -40,7 +40,7 @@ public class DbConnectionPostgres implements DbConnection {
     @Override
     public Connection openConnection() {
         PostgresUser user = PostgresUser.getInstance();
-        return openConnection("postgres", "m8", DB_DRIVER, DatabaseSettings.POSTGRES_DATABASE_URL);
+        return openConnection(user.getUsername(), user.getPassword(), DB_DRIVER, DatabaseSettings.POSTGRES_DATABASE_URL);
     }
 
     //TODO: Implement the following methods
