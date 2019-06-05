@@ -13,9 +13,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.TreeMap;
+import javafx.util.Pair;
 import rdb.data.DbConnection;
 import rdb.data.DbConnectionSingletonFactory;
 
@@ -39,7 +41,7 @@ public class PostgresDB {
         "movie_info","company_name", "movie_companies", "name", "person_info", "char_name", "cast_info"};
     
     private final String[] allTables_inOrder = {"kind_type", "link_type", "info_type", "company_type", "role_type","title", "movie_link", "movie_info_idx", 
-        "movie_info","movie_companies","person_info", "cast_info", "company_name",  "name", "char_name"};
+        "movie_info","movie_companies", "cast_info", "company_name",  "name", "person_info", "char_name"};
 
     
     public PostgresDB() {
@@ -93,8 +95,8 @@ public class PostgresDB {
                 }
 
                 while (rs3.next()) {
-                    temp.append("\n" + "CONSTRAINT " + allTables[i] + "_" + rs3.getString("FK_NAME") + " FOREIGN KEY" + "(" + rs3.getString("FKCOLUMN_NAME") + ")"
-                            + " REFERENCES " + rs3.getString("PKTABLE_NAME") + "(" + rs3.getString("PKCOLUMN_NAME") + "),");
+                    //temp.append("\n" + "CONSTRAINT " + allTables[i] + "_" + rs3.getString("FK_NAME") + " FOREIGN KEY" + "(" + rs3.getString("FKCOLUMN_NAME") + ")"
+                    //        + " REFERENCES " + rs3.getString("PKTABLE_NAME") + "(" + rs3.getString("PKCOLUMN_NAME") + "),");
                 }
                 temp.deleteCharAt(temp.lastIndexOf(","));
                 temp.deleteCharAt(temp.lastIndexOf("\n"));
@@ -109,8 +111,30 @@ public class PostgresDB {
         return listSB;
     }
     
+    private ArrayList<StringBuilder>  getSQLForeignKeysforORCL(){
+        ArrayList<StringBuilder> fK_SQL_List = new ArrayList<>();
+        
+        for (int i = 0; i < allTables.length; i++) {
+            StringBuilder temp = new StringBuilder("");
+            try (ResultSet rs = databaseMetaDataPG.getImportedKeys("", "", allTables[i]);)
+            {
+                while (rs.next()) {
+                temp.append("ALTER TABLE " + allTables[i] + "_test ADD CONSTRAINT " + rs.getString("FK_NAME") +"_test"+ " FOREIGN KEY" + "(" + rs.getString("FKCOLUMN_NAME") + ")"
+                            + " REFERENCES " + rs.getString("PKTABLE_NAME")+"_test"+ "(" + rs.getString("PKCOLUMN_NAME") + ")"+ "\n");       
+                }
+                if(temp.length()!=0){
+                    fK_SQL_List.add(temp);
+                }
+            
+            }catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return fK_SQL_List;
+    }
+    
+    
     private ArrayList<StringBuilder> getSchemaSQL_for_PG() {
-        ResultSetMetaData rsmd = null;
 
         ArrayList<StringBuilder> listSB = new ArrayList<>();
         StringBuilder temp;
@@ -120,8 +144,7 @@ public class PostgresDB {
         for (int i = 0; i < allTables.length; i++) {
             temp = new StringBuilder();
             try (ResultSet rs = databaseMetaDataPG.getColumns(null, null, allTables[i], null);
-                    ResultSet rs2 = databaseMetaDataPG.getPrimaryKeys("", "", allTables[i]);
-                    ResultSet rs3 = databaseMetaDataPG.getImportedKeys("", "", allTables[i]);) {
+                    ResultSet rs2 = databaseMetaDataPG.getPrimaryKeys("", "", allTables[i]);) {
                     temp.append("CREATE TABLE " + allTables[i]+"_test" + "(" + "\n");
                 while (rs.next()) {
                         temp.append(rs.getString("COLUMN_NAME") + "\t" + rs.getString("TYPE_NAME") + "," + "\n");
@@ -131,10 +154,6 @@ public class PostgresDB {
                     temp.append("CONSTRAINT " + rs2.getString("PK_NAME") +"_test"+ " PRIMARY KEY" + "(" + rs2.getString("COLUMN_NAME") + "),");
                 }
 
-                while (rs3.next()) {
-                    //temp.append("\n" + "CONSTRAINT " + allTables[i] + "_" + rs3.getString("FK_NAME") +"_test"+ " FOREIGN KEY" + "(" + rs3.getString("FKCOLUMN_NAME") + ")"
-                    //        + " REFERENCES " + rs3.getString("PKTABLE_NAME")+"_test"+ "(" + rs3.getString("PKCOLUMN_NAME") + "),");
-                }
                 temp.deleteCharAt(temp.lastIndexOf(","));
                 temp.deleteCharAt(temp.lastIndexOf("\n"));
                 temp.append(")" + "\n");
@@ -147,6 +166,30 @@ public class PostgresDB {
                 System.out.println(sb.toString());*/
         return listSB;
     }
+    
+    private ArrayList<StringBuilder>  getSQLForeignKeysforPG(){
+        ArrayList<StringBuilder> fK_SQL_List = new ArrayList<>();
+        
+        for (int i = 0; i < allTables.length; i++) {
+            StringBuilder temp = new StringBuilder("");
+            try (ResultSet rs = databaseMetaDataPG.getImportedKeys("", "", allTables[i]);)
+            {
+                while (rs.next()) {
+                temp.append("ALTER TABLE " + allTables[i] + "_test ADD CONSTRAINT " + rs.getString("FK_NAME") +"_test"+ " FOREIGN KEY" + "(" + rs.getString("FKCOLUMN_NAME") + ")"
+                            + " REFERENCES " + rs.getString("PKTABLE_NAME")+"_test"+ "(" + rs.getString("PKCOLUMN_NAME") + ")"+ "\n");       
+                }
+                if(temp.length()!=0){
+                    fK_SQL_List.add(temp);
+                }
+            
+            }catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return fK_SQL_List;
+    }
+    
+    
 
     private String convertType_Postgres_Oracle(String s, int size) {
         String string = "";
@@ -182,32 +225,47 @@ public class PostgresDB {
         return list;
     }
 
-    private ArrayList<StringBuilder> calculateTransfer(ArrayList<String> typeNamesList, Integer[] productionYear) {
+    private ArrayList<StringBuilder> calculateTransfer(ArrayList<Pair<String,String>> table_and_types_Pairs, Integer[] productionYear) {
         ArrayList<StringBuilder> result = new ArrayList<>();
         
-        ArrayList<StringBuilder> sql_list = calculateTransfer_SQL(typeNamesList, productionYear);
+        ArrayList<StringBuilder> sql_list = calculateTransfer_SQL(table_and_types_Pairs, productionYear);
 
-        
-        for (StringBuilder sb : sql_list) {
-            System.out.println(sb.toString());
-        }
-        
+       
         try(Statement stmt = dbConPostgres.getConnection().createStatement();)
         {
             for (int i = 0; i < sql_list.size(); i++) {
-                stmt.addBatch(sql_list.get(i).toString());
+                //stmt.addBatch(sql_list.get(i).toString());
+                stmt.execute(sql_list.get(i).toString());
+                System.out.println("Tabelle "+allTables_inOrder[i]+"_test wurde erstellt.");
             }
-            stmt.executeBatch();
+            //stmt.executeBatch();
         }catch(SQLException ex){
                     ex.printStackTrace();
+        }
+        System.out.println("Tabellen mit Daten erstellt");
+        for (int i = 0; i < allTables.length; i++) {
+            String selectquery = "select count(*) from "+allTables[i]+"_test";
+            StringBuilder sbNew = new StringBuilder("");
+            try(Statement stmt = dbConPostgres.getConnection().createStatement();
+                      ResultSet rs = stmt.executeQuery(selectquery);)
+            {
+                while(rs.next()){
+                     sbNew.append("Tabelle :" +allTables[i]+"_test hat "+ rs.getInt(1)+" Zeilen ");
+                }
+            }catch(SQLException ex){
+                        ex.printStackTrace();
             }
+        System.out.println("Zeilenanzahl ausgelesen ");
+            result.add(sbNew);
+        }
 
+        //for (StringBuilder sb : result)
+        //    System.out.println(sb.toString());
         return result;
-    
     }
     
     
-    private ArrayList<StringBuilder> calculateTransfer_SQL(ArrayList<String> typeNamesList, Integer[] productionYear) {
+    private ArrayList<StringBuilder> calculateTransfer_SQL(ArrayList<Pair<String,String>> table_and_types_Pairs, Integer[] productionYear) {
 
         String[] allTables_without_typeTables = {"title", "movie_link", "movie_info_idx", 
         "movie_info","company_name", "movie_companies", "name", "person_info", "char_name", "cast_info"};
@@ -227,41 +285,48 @@ public class PostgresDB {
         StringBuilder sql_movie_companies = new StringBuilder("SELECT * from movie_companies WHERE company_type_id IN(SELECT id FROM company_type WHERE kind = '");
         StringBuilder sql_person_info = new StringBuilder("SELECT * from person_info WHERE info_type_id IN(SELECT id FROM info_type WHERE info = '");
         StringBuilder sql_cast_info = new StringBuilder("SELECT * from cast_info WHERE role_id IN(SELECT id FROM role_type WHERE role = '");
-        StringBuilder sql_company_name = new StringBuilder("SELECT * from company_name WHERE id IN(SELECT company_id FROM movie_companies WHERE id=company_id) ");
-        StringBuilder sql_name = new StringBuilder("SELECT * from name WHERE id IN(SELECT person_role_id FROM cast_info WHERE id=person_role_id) ");
-        StringBuilder sql_char_name = new StringBuilder("SELECT * from char_name WHERE id IN(SELECT person_id FROM cast_info WHERE id=person_id) ");
+        StringBuilder sql_company_name = new StringBuilder("SELECT * FROM company_name WHERE id IN (SELECT company_id ");
+        StringBuilder sql_name = new StringBuilder("SELECT * from name WHERE id IN(SELECT person_id ");
+        StringBuilder sql_char_name = new StringBuilder("SELECT * from char_name WHERE id IN(SELECT person_role_id ");
         
 
         
         int sql_movie_companies_count, sql_movie_link_count, sql_title_count, sql_person_info_count, sql_movie_info_count, sql_movie_info_idx_count, sql_cast_info_count;
         sql_movie_companies_count = sql_movie_link_count = sql_title_count = sql_person_info_count = sql_movie_info_count = sql_movie_info_idx_count = sql_cast_info_count = 0;
-
-        for (String s : typeNamesList) {
-            String tableName = getTableNames_for_calculateTransfer(s);
-            if (tableName.equals("company_type")) {
-                sql_movie_companies.append(s + "' OR kind = '");
-                sql_movie_companies_count++;
+        
+        for(Pair<String,String> pair: table_and_types_Pairs){
+                
+            switch(pair.getKey()){
+                case "company_type": 
+                        sql_movie_companies.append(pair.getValue() + "' OR kind = '");
+                        sql_movie_companies_count++;
+                        break;
+                case "link_type":
+                        sql_movie_link.append(pair.getValue() + "' OR link = '");
+                        sql_movie_link_count++;
+                        break;
+                case "kind_type":
+                        sql_title.append(pair.getValue() + "' OR kind = '");
+                        sql_title_count++;
+                        break;
+                case "info_type_movie_info_idx": 
+                        sql_movie_info_idx.append(pair.getValue() + "' OR info = '");
+                        sql_movie_info_idx_count++;
+                        break;
+                case "info_type_movie_info": 
+                        sql_movie_info.append(pair.getValue() + "' OR info = '");
+                        sql_movie_info_count++;
+                        break;
+                case "info_type_person_info":
+                        sql_person_info.append(pair.getValue() + "' OR info = '");
+                        sql_person_info_count++;
+                        break;
+                case "role_type": 
+                        sql_cast_info.append(pair.getValue() + "' OR role = '");
+                        sql_cast_info_count++;
+                        break;
             }
-            if (tableName.equals("link_type")) {
-                sql_movie_link.append(s + "' OR link = '");
-                sql_movie_link_count++;
-            }
-            if (tableName.equals("kind_type")) {
-                sql_title.append(s + "' OR kind = '");
-                sql_title_count++;
-            }
-            if (tableName.equals("info_type")) {
-                sql_person_info.append(s + "' OR info = '");
-                sql_movie_info.append(s + "' OR info = '");
-                sql_movie_info_idx.append(s + "' OR info = '");
-                sql_person_info_count++;
-                sql_movie_info_count++;
-                sql_movie_info_idx_count++;
-            }
-            if (tableName.equals("role_type")) {
-                sql_cast_info.append(s + "' OR role = '");
-                sql_cast_info_count++;
-            }
+          
         }
 
         if (sql_movie_companies_count > 0) {
@@ -271,6 +336,8 @@ public class PostgresDB {
             sql_movie_companies.delete(sql_movie_companies.indexOf("WHERE"), sql_movie_companies.length());
         }
         sql_movie_companies.append(" AND movie_id IN(SELECT id FROM title_test WHERE id = movie_id) ");
+        
+        
         if (sql_movie_link_count > 0) {
             removeStringFromStringbuilder(sql_movie_link, "OR link = '");
             sql_movie_link.append(")");
@@ -278,10 +345,12 @@ public class PostgresDB {
             sql_movie_link.delete(sql_movie_link.indexOf("WHERE"), sql_movie_link.length());
         }
         if(sql_movie_link_count > 0)
-            sql_movie_link.append(" AND movie_id IN(SELECT id FROM title_test WHERE id = movie_id) OR linked_movie_id IN(SELECT id FROM title_test WHERE id=linked_movie_id) ");
+            sql_movie_link.append(" AND movie_id IN(SELECT id FROM title_test WHERE id = movie_id) AND linked_movie_id IN(SELECT id FROM title_test WHERE id=linked_movie_id) ");
         else
-            sql_movie_link.append(" WHERE movie_id IN(SELECT id FROM title_test WHERE id = movie_id) OR linked_movie_id IN(SELECT id FROM title_test WHERE id=linked_movie_id) ");    
+            sql_movie_link.append(" WHERE movie_id IN(SELECT id FROM title_test WHERE id = movie_id) AND linked_movie_id IN(SELECT id FROM title_test WHERE id=linked_movie_id) ");    
             
+        
+        
         if (sql_title_count > 0) {
             removeStringFromStringbuilder(sql_title, "OR kind = '");
             sql_title.append(")");
@@ -294,23 +363,34 @@ public class PostgresDB {
                 sql_title.append("WHERE production_year between " + productionsYear1 + " and " + productionsYear2);
         }
 
+        
+        
         if (sql_person_info_count > 0) {
             removeStringFromStringbuilder(sql_person_info, "OR info = '");
             sql_person_info.append(")");
         } else {
             sql_person_info.delete(sql_person_info.indexOf("WHERE"), sql_person_info.length());
         }
-
+        if (sql_person_info_count > 0)
+            sql_person_info.append(" AND person_id IN(SELECT id FROM name_test WHERE id = person_id) ");
+        else
+            sql_person_info.append(" WHERE person_id IN(SELECT id FROM name_test WHERE id = person_id) ");
+        
+        
         if (sql_movie_info_idx_count > 0) {
             removeStringFromStringbuilder(sql_movie_info_idx, "OR info = '");
             sql_movie_info_idx.append(")");
         } else {
             sql_movie_info_idx.delete(sql_movie_info_idx.indexOf("WHERE"), sql_movie_info_idx.length());
         }
+        
+        
         if(sql_movie_info_idx_count > 0)
             sql_movie_info_idx.append(" AND movie_id IN(SELECT id FROM title_test WHERE id = movie_id) ");
         else
             sql_movie_info_idx.append(" WHERE movie_id IN(SELECT id FROM title_test WHERE id = movie_id) ");
+        
+        
         
         if (sql_movie_info_count > 0) {
             removeStringFromStringbuilder(sql_movie_info, "OR info = '");
@@ -318,10 +398,14 @@ public class PostgresDB {
         } else {
             sql_movie_info.delete(sql_movie_info.indexOf("WHERE"), sql_movie_info.length());
         }
+        
+        
         if(sql_movie_info_count > 0)
             sql_movie_info.append(" AND movie_id IN(SELECT id FROM title_test WHERE id = movie_id) ");
         else
             sql_movie_info.append(" WHERE movie_id IN(SELECT id FROM title_test WHERE id = movie_id) ");
+        
+        
         
         if (sql_cast_info_count > 0) {
             removeStringFromStringbuilder(sql_cast_info, "OR role = '");
@@ -334,8 +418,14 @@ public class PostgresDB {
         else
             sql_cast_info.append(" WHERE movie_id IN(SELECT id FROM title_test WHERE id = movie_id) ");
         
-                ;
-
+        StringBuilder sb = new StringBuilder(sql_cast_info.toString());
+        sb.delete(0, sb.indexOf("from"));
+        sql_name.append(sb.toString()+")");
+        sql_char_name.append(sb.toString()+")");
+        
+        StringBuilder sb2 = new StringBuilder(sql_movie_companies.toString());
+        sb2.delete(0, sb2.indexOf("from"));
+        sql_company_name.append(sb2.toString()+")");
         
         
           
@@ -351,10 +441,10 @@ public class PostgresDB {
         sql_list.add(sql_movie_info_idx);
         sql_list.add(sql_movie_info);
         sql_list.add(sql_movie_companies);
-        sql_list.add(sql_person_info);
         sql_list.add(sql_cast_info);
         sql_list.add(sql_company_name); 
         sql_list.add(sql_name); 
+        sql_list.add(sql_person_info);
         sql_list.add(sql_char_name);
         
         for (int i = 0; i < allTables_inOrder.length; i++) {
@@ -409,7 +499,16 @@ public class PostgresDB {
       return dropTables_PG();
     }
 
-    public ArrayList<StringBuilder> callCalculateTransfer(ArrayList<String> typeNamesList, Integer[] productionYear) {
-        return calculateTransfer(typeNamesList, productionYear);
+    public ArrayList<StringBuilder> callCalculateTransfer(ArrayList<Pair<String,String>> table_and_types_Pairs, Integer[] productionYear) {
+        return calculateTransfer(table_and_types_Pairs, productionYear);
     }
+    
+    public ArrayList<StringBuilder> callGetSQLForeignKeysforPG(){
+        return getSQLForeignKeysforPG();
+    }
+    
+     public ArrayList<StringBuilder> callGetSQLForeignKeysforORCL(){
+        return getSQLForeignKeysforORCL();
+    }
+    
 }

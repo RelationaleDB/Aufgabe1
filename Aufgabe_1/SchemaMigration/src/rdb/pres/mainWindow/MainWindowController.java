@@ -5,9 +5,17 @@ package rdb.pres.mainWindow;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.TreeMap;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,6 +29,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import rdb.RDBSchemaMigration;
 import rdb.app.App;
 
@@ -38,25 +47,38 @@ public class MainWindowController implements Initializable {
     private App app;
     
     @FXML
-    private TextField schemaEingeben;
+    private TextField textViewSchemaEingeben;
+    @FXML
+    private TextField textViewAuswahlTreffen;
+    @FXML
+    private TextField textView_Berechnung_Transfer;
+    
     @FXML
     private ListView<String> listView_Auswahl_Transfer;
     @FXML
+    
     private ChoiceBox<String> choiceBox_company_type;
     @FXML
     private ChoiceBox<String> choiceBox_link_type;
     @FXML
     private ChoiceBox<String> choiceBox_kind_type;
     @FXML
-    private ChoiceBox<String> choiceBox_info_type;
-    @FXML
     private ChoiceBox<String> choiceBox_role_type;
+    @FXML
+    private ChoiceBox<String> choiceBox_info_type_movie_info_idx;
+    @FXML
+    private ChoiceBox<String> choiceBox_info_type_movie_info;
+    @FXML
+    private ChoiceBox<String> choiceBox_info_type_person_info;
     @FXML
     private ChoiceBox<Integer> choiceBox_ProductionYear_1;
     @FXML
     private ChoiceBox<Integer> choiceBox_ProductionYear_2;
+    
     @FXML
-    private Button schemaKopieren;
+    private Button schemaNachOracleDBKopieren;
+    @FXML
+    private Button postgresTestTabellenerstellen;
     @FXML
     private Button button_addToListView;
     @FXML
@@ -65,10 +87,10 @@ public class MainWindowController implements Initializable {
     private Button button_brechneTransfer;
     @FXML
     private Button button_startTransfer;
-    @FXML
-    private TextArea textArea_beforeTransfer;
     
     private ArrayList<Button> buttonList;
+    
+    ArrayList<Pair<String,String>> table_and_types_Pairs = new ArrayList();
     
     List<ChoiceBox<String>> listOfChoiceBoxes = new ArrayList<ChoiceBox<String>>();
     ObservableList<String> observableList_typeChoices = FXCollections.observableArrayList();
@@ -89,17 +111,22 @@ public class MainWindowController implements Initializable {
     //TODO implement the controller for the migration process
 
     @FXML
-    private void schemaTransfer() {
-        if(schemaEingeben.getText().equals(""))
-            schemaEingeben.setStyle("-fx-text-inner-color: green;");
+    private void schemaTransfer_nachORCL() {
+        if(textViewSchemaEingeben.getText().equals(""))
+            textViewSchemaEingeben.setStyle("-fx-text-inner-color: green;");
         else{
-            if(app.call_SchemaTransfer(schemaEingeben.getText())){
-                schemaEingeben.setText("Das Schema wurde erfolgreich kopiert.");
-                schemaKopieren.setDisable(true);
-                schemaEingeben.setStyle("-fx-text-inner-color: black;");
+            if(app.call_SchemaTransfer(textViewSchemaEingeben.getText())){
+                textViewSchemaEingeben.setText("Das Schema wurde erfolgreich kopiert.");
+                textViewSchemaEingeben.setDisable(true);
+                textViewSchemaEingeben.setStyle("-fx-text-inner-color: black;");
                 button_startTransfer.setDisable(false);
             }
         }
+    }
+    
+    @FXML 
+    private void schemaTransfer_inPostgres(){
+        app.call_SchemaTransfer_inPostgres();
     }
     
     @FXML
@@ -107,8 +134,12 @@ public class MainWindowController implements Initializable {
         ArrayList<String> typeNamesList = new ArrayList<String>();
         for(String s:observableList_typeChoices)
             typeNamesList.add(s);
-        ArrayList<StringBuilder> calculateTransfer_infoText = app.call_CalculateTransfer(typeNamesList, productionyear);
-        
+        ArrayList<StringBuilder> calculateTransfer_infoText = app.call_CalculateTransfer(table_and_types_Pairs, productionyear);
+        //for (StringBuilder sb : calculateTransfer_infoText)
+        //    System.out.println(sb.toString());
+        listView_Auswahl_Transfer.getItems().clear();
+        for(StringBuilder sb : calculateTransfer_infoText)
+            listView_Auswahl_Transfer.getItems().add(sb.toString());
     }
     
     @FXML
@@ -117,27 +148,51 @@ public class MainWindowController implements Initializable {
     }
     @FXML
     private void deleteFromListView() {
-        String message = "";
-        while(listView_Auswahl_Transfer.getSelectionModel().selectedItemProperty().getValue()!=null){
-            String s = listView_Auswahl_Transfer.getSelectionModel().selectedItemProperty().getValue();
-            message=s;
-            observableList_typeChoices.remove(s);
-            listView_Auswahl_Transfer.getSelectionModel().clearSelection();
-        }
+      
         listView_Auswahl_Transfer.getItems().clear();
-        listView_Auswahl_Transfer.getItems().addAll(observableList_typeChoices);
-        if(!message.isEmpty())
-            schemaEingeben.setText("Type wurde gelöscht: "+message);
+        observableList_typeChoices.clear();
+        table_and_types_Pairs.clear();
     }
+    
     
     @FXML
     private void addToListView() {
         listView_Auswahl_Transfer.getItems().removeAll(observableList_typeChoices);
-        
-        for(ChoiceBox<String> cbox : listOfChoiceBoxes){
-            if(cbox.getValue()!=null&&!cbox.getValue().isEmpty())
-                observableList_typeChoices.add(cbox.getValue());
+        for (int i = 0; i < listOfChoiceBoxes.size(); i++) {
+            if(listOfChoiceBoxes.get(i).getValue()!=null&&!listOfChoiceBoxes.get(i).getValue().isEmpty()){
+                observableList_typeChoices.add(listOfChoiceBoxes.get(i).getValue());
+                Pair<String,String> pair=null;
+                switch(i){
+                case 0: 
+                        table_and_types_Pairs.add(new Pair<>("company_type", listOfChoiceBoxes.get(i).getValue()));
+                        break;
+                case 1:
+                        table_and_types_Pairs.add(new Pair<>("link_type", listOfChoiceBoxes.get(i).getValue()));
+                        break;
+                case 2:
+                        table_and_types_Pairs.add(new Pair<>("kind_type", listOfChoiceBoxes.get(i).getValue()));
+                        break;
+                case 3: 
+                        table_and_types_Pairs.add(new Pair<>("info_type_movie_info_idx", listOfChoiceBoxes.get(i).getValue()));
+                        break;
+                case 4: 
+                        table_and_types_Pairs.add(new Pair<>("info_type_movie_info", listOfChoiceBoxes.get(i).getValue()));
+                        break;
+                case 5:
+                        table_and_types_Pairs.add(new Pair<>("info_type_person_info", listOfChoiceBoxes.get(i).getValue()));
+                        break;
+                case 6: 
+                        table_and_types_Pairs.add(new Pair<>("role_type", listOfChoiceBoxes.get(i).getValue()));
+                        break;
+                }
+            }
         }
+        
+        for(Pair pair : table_and_types_Pairs){
+            System.out.println("Key: "+pair.getKey()+"\tValue: "+pair.getValue()); 
+        }
+            System.out.println("------------------------------------------------------------");
+            
         
         if(choiceBox_ProductionYear_1.getValue()!=null&&choiceBox_ProductionYear_2.getValue()!=null){
             productionyear[0]=choiceBox_ProductionYear_1.getValue();
@@ -149,19 +204,12 @@ public class MainWindowController implements Initializable {
                 productionyear[1]=temp;
             }
         }
-        
-        ObservableList list = FXCollections.observableArrayList();
-        HashSet<String> set = new HashSet<>();
-        for(String s : observableList_typeChoices){
-            if(!set.contains(s)){
-                list.add(s);
-                set.add(s);
-            }
-        }
-        observableList_typeChoices=list;
+   
         listView_Auswahl_Transfer.getItems().addAll(observableList_typeChoices);
-        schemaEingeben.setText("Diese Types... sind jetzt in der Liste");
         button_brechneTransfer.setDisable(false);
+        
+        for(ChoiceBox<String> cb : listOfChoiceBoxes)
+            cb.getSelectionModel().selectFirst();
     }
 
     private void addItems_To_ChoiceBoxes(){
@@ -176,8 +224,14 @@ public class MainWindowController implements Initializable {
         choiceBox_kind_type.getItems().addAll(app.call_ItemsList_for_ChoiceBoxes("kind_type"));
         listOfChoiceBoxes.add(choiceBox_kind_type);
         
-        choiceBox_info_type.getItems().addAll(app.call_ItemsList_for_ChoiceBoxes("info_type")); 
-        listOfChoiceBoxes.add(choiceBox_info_type);
+        choiceBox_info_type_movie_info_idx.getItems().addAll(app.call_ItemsList_for_ChoiceBoxes("info_type")); 
+        listOfChoiceBoxes.add(choiceBox_info_type_movie_info_idx);
+        
+        choiceBox_info_type_movie_info.getItems().addAll(app.call_ItemsList_for_ChoiceBoxes("info_type")); 
+        listOfChoiceBoxes.add(choiceBox_info_type_movie_info);
+        
+        choiceBox_info_type_person_info.getItems().addAll(app.call_ItemsList_for_ChoiceBoxes("info_type")); 
+        listOfChoiceBoxes.add(choiceBox_info_type_person_info);
         
         choiceBox_role_type.getItems().addAll(app.call_ItemsList_for_ChoiceBoxes("role_type"));
         listOfChoiceBoxes.add(choiceBox_role_type);

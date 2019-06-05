@@ -1,0 +1,4 @@
+#postgresPane, #oraclePane {
+    -fx-border-style: solid;
+    -fx-border-color: #cccccc;
+}

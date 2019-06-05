@@ -43,7 +43,7 @@ public class DbConnectionOracle implements rdb.data.DbConnection {
     @Override
     public Connection openConnection() {
         OracleUser user = OracleUser.getInstance();
-        return openConnection(user.getUsername(), user.getPassword(), DB_DRIVER, DatabaseSettings.ORACLE_DATABASE_URL);
+        return openConnection(user.getUsername(),user.getPassword(), DB_DRIVER, DatabaseSettings.ORACLE_DATABASE_URL);
     }
 
     //TODO: Implement the following methods

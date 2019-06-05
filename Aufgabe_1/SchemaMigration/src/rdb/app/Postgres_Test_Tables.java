@@ -60,24 +60,46 @@ public class Postgres_Test_Tables {
     }
     
     private void postgres_createSchema(ArrayList<StringBuilder> sql){
-       ArrayList<StringBuilder> sql2= postgresDB.callGetSchemaSQL_for_PG();
-        for(StringBuilder sb : sql2)
+       ArrayList<StringBuilder> sqlFK = postgresDB.callGetSQLForeignKeysforPG();
+        for(StringBuilder sb : sql)
                 System.out.println(sb.toString());
         postgres_dropTables();
             try(Statement stmt = dbConPostgres.getConnection().createStatement();)
             {
-                for(StringBuilder sql_stmt : sql2)
+                for(StringBuilder sql_stmt : sql)
                     stmt.addBatch(sql_stmt.toString()); 
                 stmt.executeBatch();
             }catch(SQLException ex){
                     ex.printStackTrace();
             } 
-        
+            
         }
+    
+     private void postgres_createFK(){
+       ArrayList<StringBuilder> sqlFK = postgresDB.callGetSQLForeignKeysforPG();
+        for(StringBuilder sb : sqlFK)
+                System.out.println(sb.toString());
+            try(Statement stmt = dbConPostgres.getConnection().createStatement();)
+            {
+                for(StringBuilder sql_stmt : sqlFK)
+                    stmt.addBatch(sql_stmt.toString()); 
+                stmt.executeBatch();
+            }catch(SQLException ex){
+                    ex.printStackTrace();
+            } 
+            
+        }
+    
+    private void add_ForeignKeysToTestTables(){
+        postgresDB.callGetSQLForeignKeysforPG();
+    }
     
     public void callCreateSchema(ArrayList<StringBuilder> sql){
         postgres_createSchema(sql);
     }
     
+    public void callCreateFK(){
+        postgres_createFK();
+    }
     
 }
